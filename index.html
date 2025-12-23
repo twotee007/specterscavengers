@@ -191,68 +191,69 @@
   const tableId = urlParams.get("tableId") || "unknown";
 
   // ===== STATE =====
-  let statusKey = `status_${tableId}`;
-  let scoreKey = `score_${tableId}`;
+let statusKey = `status_${tableId}`; // สถานะยังแยกตาม tableId
+let scoreKey = "totalScore"; // ใช้ key เดียวสำหรับคะแนนทั้งหมด
 
-  let status = localStorage.getItem(statusKey) || "ghost";
-  let score = Number(localStorage.getItem(scoreKey)) || 0;
+let status = localStorage.getItem(statusKey) || "ghost";
+let score = Number(localStorage.getItem(scoreKey)) || 0;
 
-  const statusEl = document.getElementById("status");
-  const scoreEl = document.getElementById("score");
-  const scanBtn = document.getElementById("scanBtn");
+const statusEl = document.getElementById("status");
+const scoreEl = document.getElementById("score");
+const scanBtn = document.getElementById("scanBtn");
 
-  // ฟังก์ชันแสดงสถานะ
-  function updateUI() {
-    if(status === "ghost") {
-      statusEl.textContent = "👻 โต๊ะผี";
-      statusEl.className = "status ghost";
-      scanBtn.textContent = "ปลดโต๊ะ (+10 คะแนน)";
-    } else {
-      statusEl.textContent = "✅ โต๊ะปลอดภัย";
-      statusEl.className = "status safe";
-      scanBtn.textContent = "ทำโต๊ะเป็นผีอีกครั้ง";
-    }
-    scoreEl.textContent = score;
+// ฟังก์ชันแสดงสถานะ
+function updateUI() {
+  if(status === "ghost") {
+    statusEl.textContent = "👻 โต๊ะผี";
+    statusEl.className = "status ghost";
+    scanBtn.textContent = "ปลดโต๊ะ (+10 คะแนน)";
+  } else {
+    statusEl.textContent = "✅ โต๊ะปลอดภัย";
+    statusEl.className = "status safe";
+    scanBtn.textContent = "ทำโต๊ะเป็นผีอีกครั้ง";
   }
+  scoreEl.textContent = score;
+}
+
+updateUI();
+
+function scanTable() {
+  if(status === "ghost") {
+    // ghost → safe
+    status = "safe";
+    score += 10;
+    alert(`🎉 ปลดโต๊ะ ${tableId} สำเร็จ +10 คะแนน`);
+  } else {
+    // safe → ghost
+    status = "ghost";
+    alert(`👻 โต๊ะ ${tableId} กลับมาเป็นโต๊ะผี`);
+  }
+
+  // เก็บ localStorage
+  localStorage.setItem(statusKey, status); // สถานะยังเก็บแยก table
+  localStorage.setItem(scoreKey, score);   // คะแนนใช้รวมทั้งหมด
 
   updateUI();
+}
 
-  function scanTable() {
-    if(status === "ghost") {
-      // ghost → safe
-      status = "safe";
-      score += 10;
-      alert(`🎉 ปลดโต๊ะ ${tableId} สำเร็จ +10 คะแนน`);
-    } else {
-      // safe → ghost
-      status = "ghost";
-      alert(`👻 โต๊ะ ${tableId} กลับมาเป็นโต๊ะผี`);
-    }
+function toggleRewards() {
+  const panel = document.getElementById("rewardPanel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
 
-    // เก็บ localStorage
-    localStorage.setItem(statusKey, status);
-    localStorage.setItem(scoreKey, score);
-
-    updateUI();
+function redeem(cost) {
+  if (score < cost) {
+    alert("❌ คะแนนไม่เพียงพอ");
+    return;
   }
 
-  function toggleRewards() {
-    const panel = document.getElementById("rewardPanel");
-    panel.style.display = panel.style.display === "block" ? "none" : "block";
-  }
+  score -= cost;
+  localStorage.setItem(scoreKey, score);
+  updateUI();
 
-  function redeem(cost) {
-    if (score < cost) {
-      alert("❌ คะแนนไม่เพียงพอ");
-      return;
-    }
+  alert("🎁 แลกรางวัลสำเร็จ! แสดงหน้านี้ให้ร้านค้า");
+}
 
-    score -= cost;
-    localStorage.setItem(scoreKey, score);
-    updateUI();
-
-    alert("🎁 แลกรางวัลสำเร็จ! แสดงหน้านี้ให้ร้านค้า");
-  }
 </script>
 
 
