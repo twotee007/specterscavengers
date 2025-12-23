@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>ล่าท้าโต๊ะผี 👻</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Prompt", sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 380px;
+      background: #ffffff;
+      color: #333;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #512da8, #673ab7);
+      padding: 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .score {
+      margin-top: 8px;
+      font-size: 16px;
+      opacity: .9;
+    }
+
+    .content {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .status {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .ghost {
+      color: #e53935;
+    }
+
+    .safe {
+      color: #43a047;
+    }
+
+    .desc {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: .2s;
+    }
+
+    .btn-main {
+      background: linear-gradient(135deg, #ff5252, #ff1744);
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .btn-main:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-reward {
+      background: linear-gradient(135deg, #00c853, #00e676);
+      color: #fff;
+    }
+
+    .reward-panel {
+      display: none;
+      padding: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .reward {
+      background: #f5f7fa;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reward span {
+      font-size: 14px;
+    }
+
+    .reward button {
+      width: auto;
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #1976d2;
+      color: white;
+      border-radius: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>🎯 ล่าท้าโต๊ะผี</h1>
+    <div class="score">
+      คะแนนสะสม: <strong id="score">0</strong> แต้ม
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="status" class="status ghost">
+      👻 โต๊ะผี
+    </div>
+
+    <div class="desc">
+      พบโต๊ะที่มีของวางทิ้งไว้โดยไม่มีผู้ใช้งาน<br>
+      กดปลดโต๊ะเพื่อช่วยให้โต๊ะว่างพร้อมใช้
+    </div>
+
+    <button id="scanBtn" class="btn-main" onclick="scanTable()">
+      ปลดโต๊ะ (+10 คะแนน)
+    </button>
+
+    <button class="btn-reward" onclick="toggleRewards()">
+      🎁 แลกรางวัล
+    </button>
+  </div>
+
+  <div class="reward-panel" id="rewardPanel">
+    <div class="reward">
+      <span>☕ ส่วนลดกาแฟ 10 บาท<br>ใช้ 20 คะแนน</span>
+      <button onclick="redeem(20)">แลก</button>
+    </div>
+    <div class="reward">
+      <span>🍪 ส่วนลดขนม 20 บาท<br>ใช้ 30 คะแนน</span>
+      <button onclick="redeem(30)">แลก</button>
+    </div>
+    <div class="reward">
+      <span>🥤 เครื่องดื่มฟรี<br>ใช้ 50 คะแนน</span>
+      <button onclick="redeem(50)">แลก</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Gamification for Library Space
+  </div>
+</div>
+
+<script>
+  // ===== ดึง tableId จาก URL =====
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableId = urlParams.get("tableId") || "unknown";
+
+  // ===== STATE =====
+  let statusKey = `status_${tableId}`;
+  let scoreKey = `score_${tableId}`;
+
+  let status = localStorage.getItem(statusKey) || "ghost";
+  let score = Number(localStorage.getItem(scoreKey)) || 0;
+
+  const statusEl = document.getElementById("status");
+  const scoreEl = document.getElementById("score");
+  const scanBtn = document.getElementById("scanBtn");
+
+  // ฟังก์ชันแสดงสถานะ
+  function updateUI() {
+    if(status === "ghost") {
+      statusEl.textContent = "👻 โต๊ะผี";
+      statusEl.className = "status ghost";
+      scanBtn.textContent = "ปลดโต๊ะ (+10 คะแนน)";
+    } else {
+      statusEl.textContent = "✅ โต๊ะปลอดภัย";
+      statusEl.className = "status safe";
+      scanBtn.textContent = "ทำโต๊ะเป็นผีอีกครั้ง";
+    }
+    scoreEl.textContent = score;
+  }
+
+  updateUI();
+
+  function scanTable() {
+    if(status === "ghost") {
+      // ghost → safe
+      status = "safe";
+      score += 10;
+      alert(`🎉 ปลดโต๊ะ ${tableId} สำเร็จ +10 คะแนน`);
+    } else {
+      // safe → ghost
+      status = "ghost";
+      alert(`👻 โต๊ะ ${tableId} กลับมาเป็นโต๊ะผี`);
+    }
+
+    // เก็บ localStorage
+    localStorage.setItem(statusKey, status);
+    localStorage.setItem(scoreKey, score);
+
+    updateUI();
+  }
+
+  function toggleRewards() {
+    const panel = document.getElementById("rewardPanel");
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+  }
+
+  function redeem(cost) {
+    if (score < cost) {
+      alert("❌ คะแนนไม่เพียงพอ");
+      return;
+    }
+
+    score -= cost;
+    localStorage.setItem(scoreKey, score);
+    updateUI();
+
+    alert("🎁 แลกรางวัลสำเร็จ! แสดงหน้านี้ให้ร้านค้า");
+  }
+</script>
+
+
+
+</body>
+</html>
